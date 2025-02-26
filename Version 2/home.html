@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Gift Card Generator</title>
+    <style>
+
+        body {
+            font-family: 'Times New Roman', Times, serif, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Changed from height to min-height */
+            margin: 0;
+            background-color: #f5f5f5;
+            padding-top: 5px; /* Adds some spacing from the top */
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            width: 80%;
+            max-width: 800px;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+        .left, .right {
+            flex: 1;
+            padding: 20px;
+        }
+        .left {
+            border-right: 2px solid #ddd;
+        }
+        .right {
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 80%;
+            padding: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+		}
+
+		textarea {
+            max-height: 120px; /* Approximate height for 5 rows */
+            resize: none; /* Prevents manual resizing */
+            overflow-y: auto; /* Enables scrolling instead of expanding */
+            line-height: 1.2; /* Adjusts spacing to fit 5 rows properly */
+        }
+        .amounts button {
+            margin: 5px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+        }
+		.gift-card {
+            width: 300px;
+            height: 550px;
+            background: url('pepcoBackground.webp') no-repeat center center/cover;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            border-radius: 20px;
+            margin: auto;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            padding-top: 20px;
+        }
+
+        .gpay-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px; /* Adds spacing above the button */
+        }
+
+        .terms-checkbox {
+    display: inline-flex; /* Inline-flex to keep checkbox and label on the same line */
+    align-items: center; /* Vertically center checkbox with label */
+    margin-top: 12px; /* Adds spacing between the checkbox and the previous field */
+    font-size: 14px;
+}
+
+.terms-checkbox input {
+    margin-right: 10px; /* Space between checkbox and label */
+}
+
+.terms-checkbox label {
+    margin: 0; /* Remove any extra margin */
+    font-size: 14px;
+}
+
+
+
+        @media (max-width: 600px) {
+            .container {
+                flex-direction: column;
+                padding: 15px;
+                width: 95%;
+            }
+            .left {
+                border-right: none;
+                border-bottom: 2px solid #ddd;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <div class="left">
+            <label for="recipient">Recipient's Name:</label>
+            <input type="text" id="recipient" placeholder="Enter recipient's name" maxlength="30">
+            
+            <label for="message">Message (max 180 characters):</label>
+            <textarea id="message" maxlength="180" rows="5" placeholder="Write your message..."></textarea>
+            
+            <label for="email">Recipient's Email:</label>
+            <input type="email" id="email" placeholder="Enter recipient's email" maxlength="50">
+
+            <label>Choose Amount:</label>
+            <div class="amounts">
+                <button onclick="setAmount(1000)">1000 RSD</button>
+                <button onclick="setAmount(2000)">2000 RSD</button>
+                <button onclick="setAmount(5000)">5000 RSD</button>
+            </div>
+
+            <div class="terms-checkbox">
+                <input type="checkbox" id="terms" required>
+                <label for="terms">I have read the <a href="#">Terms of Use</a></label>
+            </div>            
+
+
+            <div class="gift-card-info">
+                <p><strong>Poklon e-kartica</strong> je virtuelna kartica sa mogućnošću zakazivanja isporuke ili momentalnog primanja.</p>
+                <p><strong>Više informacija</strong></p>
+                <ul>
+                    <li>Dostavlja se e-poštom. Možete da odaberete dan i vreme dostave.</li>
+                    <li>Važi u Srbiji, u svim Pepco prodavnicama.</li>
+                    <li>Poklon-kartica važi tri godine od dana dostave primaocu.</li>
+                </ul>
+            </div>
+            
+            <div class="gpay-container">
+                <div id="buy-now"></div> <!-- Google Pay button will be inserted here -->
+            </div>
+
+        </div>
+
+        
+
+
+        <div class="right">
+            <h3>Gift Card Preview</h3>
+            <div class="gift-card" id="giftCard">
+                <p id="giftName">Recipient Name</p>
+                <p id="giftMessage">Your message here...</p>
+                <p id="giftAmount">Amount: 0 RSD</p>
+            </div>
+        </div>
+    </div>
+    
+    
+    <!-- Include client.js that contains the Google Pay setup logic -->
+    <script src="client.js"></script>
+    <script src="fetch.js"></script>
+
+    <script>
+
+    //Enforce the <textarea> field to max 180 character and 5 rows.
+    document.getElementById('message').addEventListener('input', function (event) {
+        let text = this.value;
+        let lines = text.split("\n");
+
+        // Enforce max characters (180)
+        if (text.length > 180) {
+            text = text.slice(0, 180);
+            lines = text.split("\n");
+        }
+
+        // Enforce max 5 rows
+        if (lines.length > 5) {
+            lines = lines.slice(0, 5);
+            text = lines.join("\n");
+        }
+
+        this.value = text;
+        document.getElementById('giftMessage').innerText = text || 'Your message here...';
+    });
+
+    // Handle pasted text properly
+    document.getElementById('message').addEventListener('paste', function (event) {
+        event.preventDefault(); // Prevent default paste action
+        let paste = (event.clipboardData || window.clipboardData).getData('text'); // Get pasted text
+        let text = this.value + paste; // Append pasted text to existing content
+
+        // Apply the same character and row constraints
+        let lines = text.split("\n");
+
+        if (text.length > 180) {
+            text = text.slice(0, 180);
+            lines = text.split("\n");
+        }
+
+        if (lines.length > 5) {
+            lines = lines.slice(0, 5);
+            text = lines.join("\n");
+        }
+
+        this.value = text;
+        document.getElementById('giftMessage').innerText = text || 'Your message here...';
+    });
+
+
+
+
+    //The following function makes the selected amount button red. By default they are blue.
+        function setAmount(amount) {
+            document.getElementById('giftAmount').innerText = `Amount: ${amount} RSD`;
+        }
+        document.getElementById('recipient').addEventListener('input', function() {
+            document.getElementById('giftName').innerText = this.value || 'Recipient Name';
+        });
+        document.getElementById('message').addEventListener('input', function() {
+            document.getElementById('giftMessage').innerText = this.value || 'Your message here...';
+        });
+
+        function setAmount(amount) {
+        document.getElementById('giftAmount').innerText = `Amount: ${amount} RSD`;
+
+        // Reset all buttons to blue
+        document.querySelectorAll('.amounts button').forEach(button => {
+            button.style.background = '#007bff'; // Blue color
+        });
+
+        // Change the clicked button to red
+        event.target.style.background = 'red';
+    }
+
+    document.getElementById('recipient').addEventListener('input', function() {
+        document.getElementById('giftName').innerText = this.value || 'Recipient Name';
+    });
+
+    document.getElementById('message').addEventListener('input', function() {
+        document.getElementById('giftMessage').innerText = this.value || 'Your message here...';
+    });
+
+    </script>
+
+</body>
+</html>
